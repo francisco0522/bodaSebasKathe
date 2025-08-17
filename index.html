@@ -22,22 +22,7 @@
     <main>
       <h1>Home page</h1>
 
-      <!-- Formulario para mensajes -->
-      <form id="msgForm">
-        <input
-          type="text"
-          id="mensaje"
-          placeholder="Escribe un mensaje"
-          required
-        />
-        <button type="submit">Guardar mensaje</button>
-      </form>
-
-      <h2>📋 Mensajes guardados</h2>
-      <ul id="lista"></ul>
-
-      <hr />
-
+      
       <!-- Formulario para fotos -->
       <h2>📸 Subir una foto</h2>
       <form id="photoForm">
@@ -81,35 +66,7 @@
       const db = getFirestore(app);
       const storage = getStorage(app);
 
-      // -----------------------------
-      // 📋 MENSAJES
-      // -----------------------------
-      const form = document.getElementById('msgForm');
-      const lista = document.getElementById('lista');
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const texto = document.getElementById('mensaje').value;
-
-        await addDoc(collection(db, 'mensajes'), {
-          texto,
-          fecha: new Date(),
-        });
-
-        form.reset();
-        cargarMensajes();
-      });
-
-      async function cargarMensajes() {
-        lista.innerHTML = '';
-        const snapshot = await getDocs(collection(db, 'mensajes'));
-        snapshot.forEach((doc) => {
-          const li = document.createElement('li');
-          li.textContent = doc.data().texto;
-          lista.appendChild(li);
-        });
-      }
-
+ 
       // -----------------------------
       // 📸 FOTOS
       // -----------------------------
