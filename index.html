@@ -11,55 +11,43 @@
 <body>
   <h1>Subir imagen a Google Drive</h1>
 
-  <form id="photoForm">
-    <input type="file" id="foto" accept="image/*" required>
+  <!-- Formulario directo a Apps Script -->
+  <form id="photoForm" action="TU_WEB_APP_URL_AQUI" method="post" enctype="multipart/form-data" target="hidden_iframe">
+    <input type="file" name="file" accept="image/*" required>
     <button type="submit">Subir</button>
   </form>
+
+  <iframe name="hidden_iframe" style="display:none;"></iframe>
 
   <h2>Galería</h2>
   <div id="galeria"></div>
 
   <script>
-    const photoForm = document.getElementById('photoForm');
     const galeria = document.getElementById('galeria');
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw6B7_0_WUeQaTxlxEJ4moBt-QNRU-zZu793Jttuea53xcUpYE3Ko4S1rzNgdEBm5KT/exec'; // mismo que el action del form
 
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxoUO-XeVYO4v5I0zZ7tsw7sc2zERfXbva_8vjiZC-wZ2DRNv6bonmwikMJEGNpKrmC/exec'; // URL del Apps Script
-
-    // Subir imagen
-    photoForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const archivo = document.getElementById('foto').files[0];
-      if (!archivo) return;
-
-      const formData = new FormData();
-      formData.append('file', archivo);
-
-      const res = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
-      const data = await res.json();
-
-      if (data.url) {
-        cargarImagenes(); // recargar todas las imágenes después de subir
-      } else {
-        alert('Error al subir: ' + data.error);
+    // Escuchar mensajes del iframe (cuando se sube la imagen)
+    window.addEventListener('message', (event) => {
+      const url = event.data;
+      if (url) {
+        agregarImagen(url);
       }
-
-      photoForm.reset();
     });
 
-    // Cargar todas las imágenes del folder
-    async function cargarImagenes() {
-      galeria.innerHTML = '';
-      const res = await fetch(WEB_APP_URL); // GET para listar
-      const urls = await res.json();
-
-      urls.forEach(url => {
-        const img = document.createElement('img');
-        img.src = url.replace('/view', '/preview'); // para mostrar directamente
-        galeria.appendChild(img);
-      });
+    // Cargar imagen en la galería
+    function agregarImagen(url) {
+      const img = document.createElement('img');
+      img.src = url.replace('/view', '/preview');
+      galeria.appendChild(img);
     }
 
-    // Cargar al inicio
+    // Cargar imágenes existentes (opcional)
+    async function cargarImagenes() {
+      const res = await fetch(WEB_APP_URL); // GET para listar imágenes
+      const urls = await res.json();
+      urls.forEach(url => agregarImagen(url));
+    }
+
     cargarImagenes();
   </script>
 </body>
