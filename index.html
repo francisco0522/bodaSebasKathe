@@ -9,10 +9,10 @@
   </style>
 </head>
 <body>
-  <h1>Subir imagen a Google Drive 1</h1>
+  <h1>Subir imagen a Google Drive</h1>
 
-  <!-- Formulario directo a Apps Script -->
-  <form id="photoForm" action="https://script.google.com/macros/s/AKfycbw6B7_0_WUeQaTxlxEJ4moBt-QNRU-zZu793Jttuea53xcUpYE3Ko4S1rzNgdEBm5KT/exec" method="post" enctype="multipart/form-data" target="hidden_iframe">
+  <!-- Formulario POST a Apps Script en iframe oculto -->
+  <form id="photoForm" action="https://script.google.com/macros/s/AKfycbzAsS5OO1sylQKKRmudpPPOfBrvbtxpDupauk9uYxEhSMWRdFhyveCR4RN42bmCEH2l/exec" method="post" enctype="multipart/form-data" target="hidden_iframe">
     <input type="file" name="file" accept="image/*" required>
     <button type="submit">Subir</button>
   </form>
@@ -24,31 +24,27 @@
 
   <script>
     const galeria = document.getElementById('galeria');
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw6B7_0_WUeQaTxlxEJ4moBt-QNRU-zZu793Jttuea53xcUpYE3Ko4S1rzNgdEBm5KT/exec'; // mismo que el action del form
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzAsS5OO1sylQKKRmudpPPOfBrvbtxpDupauk9uYxEhSMWRdFhyveCR4RN42bmCEH2l/exec'; // Igual que el form action
 
     // Escuchar mensajes del iframe (cuando se sube la imagen)
     window.addEventListener('message', (event) => {
       const url = event.data;
-      if (url) {
-        agregarImagen(url);
-      }
+      if (url) agregarImagen(url);
     });
 
-    // Cargar imagen en la galería
     function agregarImagen(url) {
       const img = document.createElement('img');
-      img.src = url.replace('/view', '/preview');
+      img.src = url.replace('/view','/preview');
       galeria.appendChild(img);
     }
 
-    // Cargar imágenes existentes (opcional)
-    async function cargarImagenes() {
-      const res = await fetch(WEB_APP_URL); // GET para listar imágenes
-      const urls = await res.json();
-      urls.forEach(url => agregarImagen(url));
-    }
-
-    cargarImagenes();
+    // Cargar la galería inicial usando un iframe
+    const iframe = document.createElement('iframe');
+    iframe.src = WEB_APP_URL;
+    iframe.style.width = '100%';
+    iframe.style.height = '400px';
+    iframe.style.border = 'none';
+    document.getElementById('galeria').appendChild(iframe);
   </script>
 </body>
 </html>
