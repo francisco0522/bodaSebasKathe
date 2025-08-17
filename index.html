@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Home</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="/" aria-current="page">Home</a>
+      <a href="/page2.html">Other page</a>
+    </nav>
+
+    <main>
+      <h1>Home page</h1>
+
+      <!-- Formulario -->
+      <form id="msgForm">
+        <input
+          type="text"
+          id="mensaje"
+          placeholder="Escribe un mensaje"
+          required
+        />
+        <button type="submit">Guardar</button>
+      </form>
+
+      <h2>📋 Mensajes guardados</h2>
+      <ul id="lista"></ul>
+    </main>
+
+    <!-- Firebase -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+      } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+      // 🔥 Configuración de tu proyecto
+      const firebaseConfig = {
+        apiKey: 'AIzaSyBFaJ6SNZQzZIp2TphzeLydvxozCJiVJlE',
+        authDomain: 'boda-sebas-y-kathe.firebaseapp.com',
+        projectId: 'boda-sebas-y-kathe',
+        storageBucket: 'boda-sebas-y-kathe.firebasestorage.app',
+        messagingSenderId: '466003894682',
+        appId: '1:466003894682:web:534ef8366ad39c224f5a23',
+        measurementId: 'G-QMQBZKYLLK',
+      };
+
+      // Inicializar Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // Referencias al DOM
+      const form = document.getElementById('msgForm');
+      const lista = document.getElementById('lista');
+
+      // Función para mostrar logs en pantalla
+      function log(msg) {
+        const pre = document.createElement('pre');
+        pre.textContent = msg;
+        document.body.appendChild(pre);
+      }
+
+      // Guardar mensajes
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const texto = document.getElementById('mensaje').value;
+
+        await addDoc(collection(db, 'mensajes'), {
+          texto,
+          fecha: new Date(),
+        });
+
+        log('✅ Mensaje guardado: ' + texto);
+
+        form.reset();
+        cargarMensajes();
+      });
+
+      // Cargar mensajes de Firestore
+      async function cargarMensajes() {
+        lista.innerHTML = '';
+        const snapshot = await getDocs(collection(db, 'mensajes'));
+        snapshot.forEach((doc) => {
+          const li = document.createElement('li');
+          li.textContent = doc.data().texto;
+          lista.appendChild(li);
+        });
+      }
+
+      // Cargar al inicio
+      cargarMensajes();
+    </script>
+  </body>
+</html>
