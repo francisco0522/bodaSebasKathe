@@ -1,115 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Home</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="stylesheet" href="styles.css" />
-    <style>
-      img {
-        max-width: 200px;
-        margin: 5px;
-        border-radius: 8px;
-      }
-    </style>
-  </head>
-  <body>
-    <nav>
-      <a href="/" aria-current="page">Home</a>
-      <a href="/page2.html">Other page</a>
-    </nav>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Galería Google Drive</title>
+  <style>
+    img { max-width: 200px; margin: 5px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Subir imagen a Google Drive</h1>
 
-    <main>
-      <h1>Home page</h1>
+  <form id="photoForm">
+    <input type="file" id="foto" accept="image/*" required>
+    <button type="submit">Subir</button>
+  </form>
 
-      
-      <!-- Formulario para fotos -->
-      <h2>📸 Subir una foto</h2>
-      <form id="photoForm">
-        <input type="file" id="foto" accept="image/*" required />
-        <button type="submit">Subir foto</button>
-      </form>
+  <h2>Galería</h2>
+  <div id="galeria"></div>
 
-      <h2>🖼 Galería</h2>
-      <div id="galeria"></div>
-    </main>
+  <script>
+    const photoForm = document.getElementById('photoForm');
+    const galeria = document.getElementById('galeria');
 
-    <!-- Firebase -->
-    <script type="module">
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-      import {
-        getFirestore,
-        collection,
-        addDoc,
-        getDocs,
-      } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-      import {
-        getStorage,
-        ref,
-        uploadBytes,
-        getDownloadURL,
-      } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxoUO-XeVYO4v5I0zZ7tsw7sc2zERfXbva_8vjiZC-wZ2DRNv6bonmwikMJEGNpKrmC/exec'; // URL del Apps Script
 
-      // 🔥 Configuración de tu proyecto
-      const firebaseConfig = {
-        apiKey: 'AIzaSyBFaJ6SNZQzZIp2TphzeLydvxozCJiVJlE',
-        authDomain: 'boda-sebas-y-kathe.firebaseapp.com',
-        projectId: 'boda-sebas-y-kathe',
-        storageBucket: 'boda-sebas-y-kathe.appspot.com',
-        messagingSenderId: '466003894682',
-        appId: '1:466003894682:web:534ef8366ad39c224f5a23',
-        measurementId: 'G-QMQBZKYLLK',
-      };
+    photoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const archivo = document.getElementById('foto').files[0];
+      if (!archivo) return;
 
-      // Inicializar Firebase
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      const storage = getStorage(app);
+      const formData = new FormData();
+      formData.append('file', archivo);
 
- 
-      // -----------------------------
-      // 📸 FOTOS
-      // -----------------------------
-      const photoForm = document.getElementById('photoForm');
-      const galeria = document.getElementById('galeria');
-
-      photoForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const archivo = document.getElementById('foto').files[0];
-        if (!archivo) return;
-
-        // 1. Subir archivo a Storage
-        const storageRef = ref(storage, 'imagenes/' + archivo.name);
-        await uploadBytes(storageRef, archivo);
-
-        // 2. Obtener URL pública
-        const url = await getDownloadURL(storageRef);
-
-        // 3. Guardar referencia en Firestore
-        await addDoc(collection(db, 'imagenes'), {
-          url,
-          fecha: new Date(),
-        });
-
-        photoForm.reset();
-        cargarImagenes();
+      const res = await fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: formData
       });
 
-      async function cargarImagenes() {
-        galeria.innerHTML = '';
-        const snapshot = await getDocs(collection(db, 'imagenes'));
-        snapshot.forEach((doc) => {
-          const img = document.createElement('img');
-          img.src = doc.data().url;
-          galeria.appendChild(img);
-        });
+      const data = await res.json();
+      if (data.url) {
+        cargarImagenes([data.url]); // agregamos la imagen subida
+      } else {
+        alert('Error al subir: ' + data.error);
       }
 
-      // -----------------------------
-      // 🚀 INICIO
-      // -----------------------------
-      cargarMensajes();
-      cargarImagenes();
-    </script>
-  </body>
+      photoForm.reset();
+    });
+
+    function cargarImagenes(urls = []) {
+      galeria.innerHTML = '';
+      urls.forEach(url => {
+        const img = document.createElement('img');
+        img.src = url.replace('/view', '/preview'); // para mostrar directamente en <img>
+        galeria.appendChild(img);
+      });
+    }
+  </script>
+</body>
 </html>
