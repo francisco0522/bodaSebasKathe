@@ -5,6 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      img {
+        max-width: 200px;
+        margin: 5px;
+        border-radius: 8px;
+      }
+    </style>
   </head>
   <body>
     <nav>
@@ -15,7 +22,7 @@
     <main>
       <h1>Home page</h1>
 
-      <!-- Formulario -->
+      <!-- Formulario para mensajes -->
       <form id="msgForm">
         <input
           type="text"
@@ -23,11 +30,23 @@
           placeholder="Escribe un mensaje"
           required
         />
-        <button type="submit">Guardar</button>
+        <button type="submit">Guardar mensaje</button>
       </form>
 
       <h2>📋 Mensajes guardados</h2>
       <ul id="lista"></ul>
+
+      <hr />
+
+      <!-- Formulario para fotos -->
+      <h2>📸 Subir una foto</h2>
+      <form id="photoForm">
+        <input type="file" id="foto" accept="image/*" required />
+        <button type="submit">Subir foto</button>
+      </form>
+
+      <h2>🖼 Galería</h2>
+      <div id="galeria"></div>
     </main>
 
     <!-- Firebase -->
@@ -39,13 +58,19 @@
         addDoc,
         getDocs,
       } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+      import {
+        getStorage,
+        ref,
+        uploadBytes,
+        getDownloadURL,
+      } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 
       // 🔥 Configuración de tu proyecto
       const firebaseConfig = {
         apiKey: 'AIzaSyBFaJ6SNZQzZIp2TphzeLydvxozCJiVJlE',
         authDomain: 'boda-sebas-y-kathe.firebaseapp.com',
         projectId: 'boda-sebas-y-kathe',
-        storageBucket: 'boda-sebas-y-kathe.firebasestorage.app',
+        storageBucket: 'boda-sebas-y-kathe.appspot.com',
         messagingSenderId: '466003894682',
         appId: '1:466003894682:web:534ef8366ad39c224f5a23',
         measurementId: 'G-QMQBZKYLLK',
@@ -54,19 +79,14 @@
       // Inicializar Firebase
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
+      const storage = getStorage(app);
 
-      // Referencias al DOM
+      // -----------------------------
+      // 📋 MENSAJES
+      // -----------------------------
       const form = document.getElementById('msgForm');
       const lista = document.getElementById('lista');
 
-      // Función para mostrar logs en pantalla
-      function log(msg) {
-        const pre = document.createElement('pre');
-        pre.textContent = msg;
-        document.body.appendChild(pre);
-      }
-
-      // Guardar mensajes
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const texto = document.getElementById('mensaje').value;
@@ -76,13 +96,10 @@
           fecha: new Date(),
         });
 
-        log('✅ Mensaje guardado: ' + texto);
-
         form.reset();
         cargarMensajes();
       });
 
-      // Cargar mensajes de Firestore
       async function cargarMensajes() {
         lista.innerHTML = '';
         const snapshot = await getDocs(collection(db, 'mensajes'));
@@ -93,8 +110,49 @@
         });
       }
 
-      // Cargar al inicio
+      // -----------------------------
+      // 📸 FOTOS
+      // -----------------------------
+      const photoForm = document.getElementById('photoForm');
+      const galeria = document.getElementById('galeria');
+
+      photoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const archivo = document.getElementById('foto').files[0];
+        if (!archivo) return;
+
+        // 1. Subir archivo a Storage
+        const storageRef = ref(storage, 'imagenes/' + archivo.name);
+        await uploadBytes(storageRef, archivo);
+
+        // 2. Obtener URL pública
+        const url = await getDownloadURL(storageRef);
+
+        // 3. Guardar referencia en Firestore
+        await addDoc(collection(db, 'imagenes'), {
+          url,
+          fecha: new Date(),
+        });
+
+        photoForm.reset();
+        cargarImagenes();
+      });
+
+      async function cargarImagenes() {
+        galeria.innerHTML = '';
+        const snapshot = await getDocs(collection(db, 'imagenes'));
+        snapshot.forEach((doc) => {
+          const img = document.createElement('img');
+          img.src = doc.data().url;
+          galeria.appendChild(img);
+        });
+      }
+
+      // -----------------------------
+      // 🚀 INICIO
+      // -----------------------------
       cargarMensajes();
+      cargarImagenes();
     </script>
   </body>
 </html>
