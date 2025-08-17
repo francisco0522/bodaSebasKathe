@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width">
@@ -25,6 +25,7 @@
 
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxoUO-XeVYO4v5I0zZ7tsw7sc2zERfXbva_8vjiZC-wZ2DRNv6bonmwikMJEGNpKrmC/exec'; // URL del Apps Script
 
+    // Subir imagen
     photoForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const archivo = document.getElementById('foto').files[0];
@@ -33,14 +34,11 @@
       const formData = new FormData();
       formData.append('file', archivo);
 
-      const res = await fetch(WEB_APP_URL, {
-        method: 'POST',
-        body: formData
-      });
-
+      const res = await fetch(WEB_APP_URL, { method: 'POST', body: formData });
       const data = await res.json();
+
       if (data.url) {
-        cargarImagenes([data.url]); // agregamos la imagen subida
+        cargarImagenes(); // recargar todas las imágenes después de subir
       } else {
         alert('Error al subir: ' + data.error);
       }
@@ -48,14 +46,21 @@
       photoForm.reset();
     });
 
-    function cargarImagenes(urls = []) {
+    // Cargar todas las imágenes del folder
+    async function cargarImagenes() {
       galeria.innerHTML = '';
+      const res = await fetch(WEB_APP_URL); // GET para listar
+      const urls = await res.json();
+
       urls.forEach(url => {
         const img = document.createElement('img');
-        img.src = url.replace('/view', '/preview'); // para mostrar directamente en <img>
+        img.src = url.replace('/view', '/preview'); // para mostrar directamente
         galeria.appendChild(img);
       });
     }
+
+    // Cargar al inicio
+    cargarImagenes();
   </script>
 </body>
 </html>
